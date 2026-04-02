@@ -11,6 +11,7 @@ import { createFarmer, listFarmers } from "@/lib/dataService";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { Farmer } from "@/lib/types";
 import { toast } from "@/components/ui/use-toast";
+import { isValidIndianMobile, sanitizeIndianMobileInput, toDialableIndianMobile } from "@/lib/phone";
 
 const FarmersPage = () => {
   const [search, setSearch] = useState("");
@@ -47,7 +48,16 @@ const FarmersPage = () => {
       return;
     }
 
-    createMutation.mutate(form);
+    if (!isValidIndianMobile(form.phone)) {
+      toast({
+        title: "Invalid mobile number",
+        description: "Enter a valid Indian mobile number (10 digits, starts with 6-9).",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    createMutation.mutate({ ...form, phone: toDialableIndianMobile(form.phone) });
   };
 
   return (
@@ -66,7 +76,19 @@ const FarmersPage = () => {
               <DialogHeader><DialogTitle>Register Farmer</DialogTitle></DialogHeader>
               <div className="space-y-4 pt-4">
                 <div><Label>Name</Label><Input placeholder="Full name" value={form.name} onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))} /></div>
-                <div><Label>Phone</Label><Input placeholder="+91..." value={form.phone} onChange={(e) => setForm((prev) => ({ ...prev, phone: e.target.value }))} /></div>
+                <div>
+                  <Label>Phone</Label>
+                  <Input
+                    placeholder="10-digit mobile"
+                    inputMode="numeric"
+                    maxLength={10}
+                    value={form.phone}
+                    onChange={(e) => {
+                      const digitsOnly = sanitizeIndianMobileInput(e.target.value);
+                      setForm((prev) => ({ ...prev, phone: digitsOnly }));
+                    }}
+                  />
+                </div>
                 <div><Label>Village</Label><Input placeholder="Village name" value={form.village} onChange={(e) => setForm((prev) => ({ ...prev, village: e.target.value }))} /></div>
                 <div><Label>No. of Animals</Label><Input type="number" placeholder="0" value={form.animals || ""} onChange={(e) => setForm((prev) => ({ ...prev, animals: Number(e.target.value) }))} /></div>
                 <Button className="w-full" onClick={handleCreateFarmer} disabled={createMutation.isPending}>{createMutation.isPending ? "Registering..." : "Register Farmer"}</Button>
@@ -104,7 +126,24 @@ const FarmersPage = () => {
                     <TableCell>{f.village}</TableCell>
                     <TableCell>{f.animals}</TableCell>
                     <TableCell>
-                      <Button variant="ghost" size="sm"><Phone className="h-3.5 w-3.5 mr-1" /> Call</Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          const dialable = toDialableIndianMobile(f.phone);
+                          if (!dialable) {
+                            toast({
+                              title: "Invalid mobile number",
+                              description: "This farmer does not have a valid Indian mobile number.",
+                              variant: "destructive",
+                            });
+                            return;
+                          }
+                          window.location.href = `tel:${dialable}`;
+                        }}
+                      >
+                        <Phone className="h-3.5 w-3.5 mr-1" /> Call
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}

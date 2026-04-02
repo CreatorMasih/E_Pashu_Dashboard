@@ -11,6 +11,7 @@ import type {
   Vaccination,
   VillageInsight,
 } from "@/lib/types";
+import { isValidIndianMobile, toDialableIndianMobile } from "@/lib/phone";
 
 const GAS_WEB_APP_URL = import.meta.env.VITE_GAS_WEB_APP_URL as string | undefined;
 
@@ -135,6 +136,25 @@ function normalizeVillageInsights(input: unknown): VillageInsight[] {
   });
 }
 
+function normalizeFarmers(input: unknown): Farmer[] {
+  if (!Array.isArray(input)) {
+    return [];
+  }
+
+  return input.map((item) => {
+    const row = (item ?? {}) as Record<string, unknown>;
+    const phone = String(row.phone ?? "");
+    const normalizedPhone = toDialableIndianMobile(phone) || phone;
+
+    return {
+      name: String(row.name ?? ""),
+      phone: normalizedPhone,
+      village: String(row.village ?? "Unknown"),
+      animals: toNumber(row.animals),
+    };
+  });
+}
+
 function normalizeReminders(input: unknown): ReminderItem[] {
   if (!Array.isArray(input)) {
     return [];
@@ -208,11 +228,18 @@ export async function getAnimalProfile(id: string): Promise<AnimalProfileData> {
 }
 
 export async function listFarmers(): Promise<Farmer[]> {
-  return callAppsScript<Farmer[]>("farmers.list");
+  const raw = await callAppsScript<unknown>("farmers.list");
+  return normalizeFarmers(raw);
 }
 
 export async function createFarmer(input: Farmer): Promise<Farmer> {
-  return callAppsScript<Farmer>("farmers.create", { input });
+  if (!isValidIndianMobile(input.phone)) {
+    throw new Error("Invalid Indian mobile number");
+  }
+
+  const payload = { ...input, phone: toDialableIndianMobile(input.phone) };
+  const raw = await callAppsScript<unknown>("farmers.create", { input: payload });
+  return normalizeFarmers([raw])[0];
 }
 
 export async function listVaccinations(): Promise<Vaccination[]> {

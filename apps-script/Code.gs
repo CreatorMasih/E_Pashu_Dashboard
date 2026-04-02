@@ -163,14 +163,24 @@ function createFarmer_(input) {
     throw new Error("Invalid farmer input");
   }
 
+  var normalizedPhone = normalizeIndianMobile_(input.phone);
+  if (!isValidIndianMobile_(normalizedPhone)) {
+    throw new Error("Invalid Indian mobile number");
+  }
+
   appendRow_(SHEETS.FARMERS, {
     name: input.name,
-    phone: input.phone,
+    phone: "+91" + normalizedPhone,
     village: input.village,
     animals: Number(input.animals || 0)
   });
 
-  return input;
+  return {
+    name: input.name,
+    phone: "+91" + normalizedPhone,
+    village: input.village,
+    animals: Number(input.animals || 0)
+  };
 }
 
 function createPregnancyRecord_(input) {
@@ -615,6 +625,18 @@ function normalizeVillage_(value) {
       return part.charAt(0).toUpperCase() + part.slice(1);
     })
     .join(" ");
+}
+
+function normalizeIndianMobile_(value) {
+  var digits = String(value || "").replace(/\D/g, "");
+  if (digits.length > 10 && digits.indexOf("91") === 0) {
+    return digits.slice(2);
+  }
+  return digits;
+}
+
+function isValidIndianMobile_(value) {
+  return /^[6-9]\d{9}$/.test(String(value || ""));
 }
 
 function jsonResponse_(success, data, error) {

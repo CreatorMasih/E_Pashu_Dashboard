@@ -89,7 +89,6 @@ const Dashboard = () => {
           <CardContent>
             <ResponsiveContainer width="100%" height={200}>
               <LineChart data={dashboardData.vaccinationTrends}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
                 <YAxis tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
                 <Tooltip />
@@ -124,7 +123,6 @@ const Dashboard = () => {
           <CardContent>
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={dashboardData.monthlyActivity}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
                 <YAxis tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
                 <Tooltip />
