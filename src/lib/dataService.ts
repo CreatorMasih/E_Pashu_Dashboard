@@ -250,6 +250,14 @@ export async function markVaccinationDone(animalId: string, type: string): Promi
   return callAppsScript<Vaccination>("vaccinations.markDone", { animalId, type });
 }
 
+export async function updateVaccinationStatus(
+  animalId: string,
+  type: string,
+  status: Vaccination["status"],
+): Promise<Vaccination> {
+  return callAppsScript<Vaccination>("vaccinations.updateStatus", { animalId, type, status });
+}
+
 export async function listBreedingRecords(): Promise<BreedingRecord[]> {
   return callAppsScript<BreedingRecord[]>("breeding.list");
 }

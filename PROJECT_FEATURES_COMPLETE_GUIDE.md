@@ -1,425 +1,235 @@
-# Digital Livestock Monitoring Dashboard - Complete Feature and Progress Guide
+# Herd Buddy Dashboard - Complete Product Guide
 
-## 1. Purpose of This Document
-This document explains the complete working of the current site from minor to major functionality, including:
-- What each module does
-- Which user benefits from it
-- Which frontend and backend functions power it
-- How to use each feature
-- Current progress against the original concept note
+## 1. Document Purpose
+This is the master handover and demo guide for the Herd Buddy Dashboard.
+It explains:
+- what features are implemented
+- how users interact with each module
+- how frontend and backend are connected
+- which Google Sheet tabs/columns are required
+- what has been improved recently
+- how to deploy and validate everything end-to-end
 
-This is the master reference for product understanding, demo, handover, and future development.
+Use this document for client demos, team onboarding, and future feature planning.
 
-## 2. Product Summary
-The platform is a web-based livestock operations dashboard that centralizes animal, farmer, vaccination, pregnancy, alerts, task, analytics, and reminders data using:
-- Frontend: React + TypeScript + React Query + Recharts
+## 2. Product Snapshot
+Herd Buddy is a web app for livestock operations with Google Sheets as the live data source.
+
+### Tech stack
+- Frontend: React + TypeScript + Vite + TanStack Query + Recharts + shadcn/ui
 - Backend: Google Apps Script Web App
-- Database: Google Sheets (multi-tab model)
-
-Core objective: reduce missed care events, improve disease visibility, and support data-driven village-level planning.
-
-## 3. Target Users and How They Use the Product
-### 3.1 Farmers / Cattle Owners
-- Animal registration data can be recorded and viewed.
-- Vaccination due/done status can be monitored.
-- Pregnancy tracking with expected calving and reminders can be maintained.
-
-### 3.2 Veterinary Doctors
-- Can monitor alerts and critical cases by village.
-- Can use pregnancy and vaccination statuses to prioritize visits.
-- Can review reminder queues and operational data.
-
-### 3.3 Government Livestock Officers
-- Can monitor village-level coverage and risk indicators.
-- Can use analytics page to identify low-coverage or high-risk villages.
-
-### 3.4 Field Workers
-- Can update field task completion.
-- Can update pregnancy status and vaccination progress through dashboard workflows.
-
-### 3.5 Administrators / Analysts
-- Can monitor system-wide trends and monthly indicators.
-- Can analyze village-level health and vaccination metrics.
-- Can create/send reminders and monitor queue status.
-
-## 4. Full Site Structure and Routes
-Application routes:
-- / -> Main Dashboard
-- /animals -> Animal management list and registration
-- /animals/:id -> Animal profile detail
-- /farmers -> Farmer management
-- /vaccinations -> Vaccination tracking and update
-- /breeding -> Pregnancy tracking workflow
-- /alerts -> Alerts and outbreak monitoring
-- /field-officers -> Field task management
-- /ai-insights -> AI alerts and reminders operations
-- /reports -> Village-wise analytics and reporting view
-
-## 5. Features Module by Module
-
-## 5.1 Dashboard Module
-### What it provides
-- Summary cards (animals, farmers, vaccination coverage, pending vaccinations, active alerts)
-- Vaccination trend chart
-- Health status pie chart
-- Monthly activity chart
-- Recent activity feed
-
-### Backend action
-- dashboard.get
-
-### Primary usage
-- Open dashboard to get quick system health and program progress snapshot.
-
-### Important behavior
-- Data normalization is applied on frontend to prevent chart crashes from malformed sheet values.
-
-## 5.2 Animal Management Module
-### What it provides
-- Search animals by ID, breed, owner
-- Filter by health status
-- Add new animal
-- Navigate to animal profile
-
-### Backend actions
-- animals.list
-- animals.create
-- animals.profile
-
-### Primary usage flow
-1. Open Animals page
-2. Search/filter as needed
-3. Add animal using registration dialog
-4. Click row to open profile
-
-### Notes
-- Data is normalized to avoid breakage from missing/malformed fields.
-
-## 5.3 Animal Profile Module
-### What it provides
-- Animal details
-- Vaccination history
-- Breeding history
-- Upcoming reminders
-
-### Backend action
-- animals.profile
-
-### Primary usage
-- Open profile from Animals page for case-level history and follow-up details.
-
-## 5.4 Farmer Management Module
-### What it provides
-- Farmer search and listing
-- Farmer registration (name, phone, village, animal count)
-
-### Backend actions
-- farmers.list
-- farmers.create
-
-### Primary usage
-- Register and maintain farmer-level ownership/village metadata.
-
-## 5.5 Vaccination Tracker Module
-### What it provides
-- Vaccination records by animal
-- Mark pending/overdue records as done
-
-### Backend actions
-- vaccinations.list
-- vaccinations.markDone
-
-### Primary usage
-- Use as day-to-day vaccination execution tracker.
-
-## 5.6 Pregnancy Tracking Module
-### What it provides
-- Pregnancy records list
-- Create new pregnancy record
-- Update lifecycle status
-- Summary counts: total, active pregnancies, delivered
-
-### Backend actions
-- pregnancy.list
-- pregnancy.create
-- pregnancy.updateStatus
-
-### Primary usage flow
-1. Add record with insemination and expected calving date
-2. Update status as case progresses
-3. Use summary cards to track outcomes
-
-### Status lifecycle
-- Inseminated
-- Pregnant
-- Due Soon
-- Delivered
-
-## 5.7 Alerts and Outbreak Monitoring Module
-### What it provides
-- Manual/base alerts from Alerts sheet
-- Auto-generated outbreak alerts
-
-### Outbreak logic implemented
-- If critical animals count in same village is >= 2, system generates an AI alert
-- Priority becomes High when cluster is larger
-
-### Backend actions
-- alerts.list (internally merges base alerts + outbreak alerts)
-
-### Primary usage
-- Monitor high-risk villages and trigger preventive intervention.
-
-## 5.8 Field Officer Task Module
-### What it provides
-- Daily task list
-- Toggle completion status
-- Quick operational progress cards
-
-### Backend actions
-- tasks.list
-- tasks.toggle
-
-### Primary usage
-- Track execution of assigned field activities.
-
-## 5.9 AI Alerts and Reminders Module
-### What it provides
-- Displays AI Alert signals
-- Create reminders manually
-- View reminder queue
-- Send reminders (state update)
-- Includes auto reminders built from pending vaccinations
-
-### Backend actions
-- reminders.list
-- reminders.create
-- reminders.send
-
-### Primary usage flow
-1. Review AI signals
-2. Create reminder with channel and due date
-3. Send pending reminders
-4. Track sent status and sent timestamp
-
-## 5.10 Village Analytics Module
-### What it provides
-- Village-wise vaccination coverage chart
-- Village health table with:
-  - Total animals
-  - Critical animals
-  - Pending vaccinations
-  - Pregnant animals
-  - Coverage percentage
-
-### Backend action
-- analytics.villageInsights
-
-### Primary usage
-- Campaign planning, risk targeting, and resource allocation.
-
-## 6. Backend Function Inventory (Apps Script)
-All actions are routed by doPost(action, payload).
-
-### 6.1 Router and Infrastructure
-- doPost
-- jsonResponse_
-- getSheet_
-- listRows_
-- appendRow_
-- toBool_
-- formatDate_
-
-### 6.2 Dashboard and Core Data
-- getDashboardData_
-- createAnimal_
-- getAnimalProfile_
-- createFarmer_
-- markVaccinationDone_
-- toggleTask_
-
-### 6.3 Pregnancy Functions
-- createPregnancyRecord_
-- updatePregnancyStatus_
-
-### 6.4 Alert and Outbreak Functions
-- getAlertsWithOutbreaks_
-- detectOutbreakAlerts_
-
-### 6.5 Village Insight Functions
-- getVillageInsights_
-
-### 6.6 Reminder Functions
-- getReminders_
-- buildAutoVaccinationReminders_
-- createReminder_
-- sendReminder_
-
-## 7. Frontend Service Function Inventory
-Service layer file centralizes all API calls and data normalization.
-
-### 7.1 Core transport and normalization
-- callAppsScript
-- normalizeDashboardData
-- normalizeAnimals
-- normalizeAlerts
-- normalizePregnancyRecords
-- normalizeVillageInsights
-- normalizeReminders
-
-### 7.2 API wrappers
-- getDashboardData
-- listAnimals
-- createAnimal
-- getAnimalProfile
-- listFarmers
-- createFarmer
-- listVaccinations
-- markVaccinationDone
-- listBreedingRecords
-- listAlerts
-- listFieldOfficerTasks
-- toggleFieldOfficerTask
-- listPregnancyRecords
-- createPregnancyRecord
-- updatePregnancyStatus
-- listVillageInsights
-- listReminders
-- createReminder
-- sendReminder
-
-## 8. Google Sheet Data Model (Required Tabs and Headers)
-Create these tabs exactly as listed:
-
-- Animals: id,breed,age,owner,status
-- Farmers: name,phone,village,animals
-- Vaccinations: animalId,type,date,status
-- Breeding: animalId,inseminationDate,expectedCalving,status
-- Pregnancy: id,animalId,village,inseminationDate,expectedCalving,status,lastCheckDate,notes
-- Alerts: id,message,priority,type,time
-- Reminders: id,village,recipient,channel,message,dueDate,status,sentAt
-- Tasks: id,task,village,completed
-- Activities: action,detail,time
-- VaccinationTrends: month,vaccinations
-- HealthStatus: name,value,fill
-- MonthlyActivity: month,registered,vaccinated,alerts
-
-## 9. Setup and Usage Guide
-## 9.1 Apps Script Setup
-1. Open script.google.com and create project
-2. Paste code from apps-script/Code.gs
-3. Deploy Web App as Me with access for intended users
-4. Copy deployment exec URL
-
-## 9.2 Frontend Setup
-1. Add VITE_GAS_WEB_APP_URL in .env
-2. Install dependencies
-3. Start dev server
-4. Open app and validate each module
-
-## 9.3 Operational Validation Checklist
-- Dashboard loads charts and summary cards
-- Animals list and create work
-- Farmers list and create work
-- Vaccination mark-done updates status
-- Pregnancy add/update works
-- Alerts include base and outbreak items
-- Reports show village analytics
-- Reminders create/send works
-- Field tasks toggle correctly
-
-## 10. Concept Document Mapping and Progress
-Original requirement categories mapped to implementation status.
-
-### 10.1 Problem-Solving Goals
-- Centralized cattle data: Implemented
-- Vaccination miss reduction: Implemented
-- Pregnancy lifecycle visibility: Implemented (basic-to-intermediate)
-- Disease early warning: Implemented (rule-based)
-- Village planning support: Implemented
-
-### 10.2 User Coverage
-- Farmers: Partial-to-strong support
-- Vets: Operational support present
-- Govt officers: Analytics support present
-- Field workers: Task and update workflows present
-- Admin/analysts: Reporting and trends present
-
-### 10.3 Feature Coverage (from original concept)
-- Cattle Registration: Implemented
-- Pregnancy Tracking: Implemented
-- Vaccination Records: Implemented
-- Health Monitoring (symptom/treatment logs): Partial, still limited
-- Veterinary Visit Records: Missing dedicated module
-- Disease Alerts: Implemented with rule-based outbreak detection
-- Village-wise Data: Implemented
-- Notifications/Reminders: Implemented internal workflow
-- AI Disease Prediction: Partial (rules, not model-based AI)
-
-### 10.4 Dashboard Visibility Requirements
-- Total registered cattle: Implemented
-- Vaccinated count/coverage: Implemented
-- Pregnant animals: Implemented in analytics/pregnancy views
-- Sick/critical: Implemented
-- Upcoming vaccination and alerts: Implemented
-- Graphs/charts for trends and distributions: Implemented
-
-### 10.5 Action Requirements
-- Register new animal: Implemented
-- Update health/vaccination: Implemented for vaccination, partial for health treatment logs
-- Add pregnancy info: Implemented
-- Schedule vet visits: Missing dedicated workflow
-- Send alerts/reminders: Implemented as internal reminder queue
-- Analyze trends: Implemented
-- Download reports: UI level existed earlier, export engine not implemented
-
-## 11. Current Completion Estimate
-Estimated alignment with original concept: 82% to 88%
-
-Main reasons not yet 90%+:
-- No dedicated veterinary visit records module
-- No full health treatment log lifecycle module (symptoms, diagnosis, treatment, follow-up)
-- No external delivery integration for SMS/WhatsApp
-- AI logic is rule-based, not predictive ML model
-- No role-based authentication and authorization
-
-## 12. Recommended Next Roadmap to Reach 90%+
-1. Add Health Records module
-- Symptoms, diagnosis, treatment, medication, recovery status
-
-2. Add Veterinary Visit module
-- Visit scheduling, doctor assignment, treatment notes, prescription
-
-3. Add Notification Provider Integration
-- Real send via provider APIs
-
-4. Add Role-Based Access
-- Farmer, Vet, Officer, Admin role permissions
-
-5. Add report export backend
-- PDF/CSV generation from filters
-
-## 13. Troubleshooting Guide
-### Issue: Dashboard stuck or blank
-- Verify env URL
-- Verify Apps Script deployment access
-- Verify spreadsheet tab names and headers
-
-### Issue: Chart errors
-- Ensure HealthStatus fill is color string
-- Frontend normalization now handles malformed values but data should still be corrected
-
-### Issue: Data not updating
-- Redeploy new Apps Script version after code changes
-- Reload app and retry action
-
-### Issue: Missing sheet errors
-- Create required tabs exactly as named in this document
-
-## 14. Notes on Data and Security
-- Current system is suitable for pilot/staging use.
-- Production use should include authentication, audit logs, and stricter access controls.
-- Sensitive user data should be protected with role checks and secure transport policies.
-
-## 15. Summary
-The system now covers the majority of your original concept with real workflows for registration, vaccination, pregnancy tracking, outbreak alerts, village analytics, and reminders operations. The remaining gap is mainly advanced health treatment lifecycle, vet visit planning, external notification delivery, and role-based governance.
+- Data store: Google Sheets (multi-tab model)
+
+### Core goal
+Improve livestock outcomes by making vaccination, pregnancy, alerts, reminders, and field execution trackable in one place.
+
+## 3. User Personas and Value
+### Farmers and owners
+- registration of animals and farmer records
+- vaccination and pregnancy follow-up visibility
+- reminders and outreach support
+
+### Vets and medical teams
+- critical case monitoring
+- overdue vaccination tracking
+- village-level risk visibility
+
+### Government and program officers
+- village analytics and coverage trends
+- risk-based planning and intervention prioritization
+
+### Field officers
+- task updates and operational follow-up
+- pregnancy and vaccination status updates in workflow
+
+## 4. Navigation and Routes
+Implemented routes:
+- `/` Dashboard
+- `/animals` Animals list and create
+- `/animals/:id` Animal profile
+- `/farmers` Farmer management
+- `/vaccinations` Vaccination tracker with status updates
+- `/breeding` Pregnancy tracking
+- `/alerts` Alerts and outbreak monitoring
+- `/field-officers` Field task tracking
+- `/ai-insights` Reminders and notifications workflow
+- `/reports` Village analytics and report export
+- `/profile` Profile and notification preferences
+
+## 5. Feature Highlights (Current Build)
+
+### 5.1 Dashboard and Monitoring
+- live summary cards for animals, farmers, coverage, pending vaccinations, alerts
+- vaccination trends chart
+- health distribution chart
+- monthly activity chart
+- recent activity feed
+
+### 5.2 Animal Management
+- add and list animals
+- searchable list and status visibility
+- profile-level drill down through animal details page
+
+### 5.3 Animal Profile
+- vaccination history timeline
+- breeding history timeline
+- upcoming reminders
+- dates shown in readable format (example: 12 Mar 2026)
+
+### 5.4 Farmer Management
+- create and list farmers
+- Indian mobile validation enforced:
+  - 10 digits
+  - starts with 6/7/8/9
+- normalized dial format used (`+91XXXXXXXXXX`)
+- click-to-call action from farmer table
+
+### 5.5 Vaccination Tracker (Enhanced)
+- list vaccination rows by animal
+- update status from dropdown:
+  - Pending
+  - Overdue
+  - Done
+- no longer limited to only Mark Done
+
+### 5.6 Pregnancy Tracking
+- create pregnancy records
+- update lifecycle status:
+  - Inseminated
+  - Pregnant
+  - Due Soon
+  - Delivered
+- summary cards for active and delivered counts
+- table and form dates are human-readable where displayed
+
+### 5.7 Alerts and Outbreak Intelligence
+- base alerts pulled from Alerts sheet
+- outbreak alerts auto-generated from critical animal clustering logic
+- high-priority alerts surfaced in top navigation notifications
+
+### 5.8 Reminders and Notifications
+- sidebar label is now Reminders
+- reminders page supports create/send workflow
+- auto reminders can be generated from pending vaccination records
+- due dates shown in formatted display style
+
+### 5.9 Reports and Analytics (Major Upgrade)
+- village-level table and charts
+- multiple charts (no slider dependency):
+  - vaccination coverage
+  - health risk (critical + pending)
+  - pregnancy and total animal load
+- top KPI cards:
+  - total animals
+  - total pregnant
+  - pending vaccinations
+  - average coverage
+  - top risk village
+- date range filter (`fromDate`, `toDate`)
+- export options:
+  - CSV download
+  - PDF download
+
+### 5.10 Notification and Profile Click Behavior
+- bell icon click:
+  - navigates to Alerts
+  - shows notification toast summary
+- user icon click:
+  - navigates to Profile page
+
+## 6. Backend Action Map (Apps Script)
+All frontend requests use `POST` with payload `{ action, payload }`.
+
+### Core actions
+- `dashboard.get`
+- `animals.list`
+- `animals.create`
+- `animals.profile`
+- `farmers.list`
+- `farmers.create`
+- `vaccinations.list`
+- `vaccinations.markDone`
+- `vaccinations.updateStatus`
+- `breeding.list`
+- `pregnancy.list`
+- `pregnancy.create`
+- `pregnancy.updateStatus`
+- `alerts.list`
+- `analytics.villageInsights`
+- `reminders.list`
+- `reminders.create`
+- `reminders.send`
+- `tasks.list`
+- `tasks.toggle`
+
+## 7. Google Sheet Data Model (Required Tabs)
+Create these tabs exactly with these headers in row 1.
+
+- `Animals`: `id,breed,age,owner,village,status`
+- `Farmers`: `name,phone,village,animals`
+- `Vaccinations`: `animalId,type,date,status`
+- `Breeding`: `animalId,inseminationDate,expectedCalving,status`
+- `Pregnancy`: `id,animalId,village,inseminationDate,expectedCalving,status,lastCheckDate,notes`
+- `Alerts`: `id,message,priority,type,time`
+- `Reminders`: `id,village,recipient,channel,message,dueDate,status,sentAt`
+- `Tasks`: `id,task,village,completed`
+- `Activities`: `action,detail,time`
+- `VaccinationTrends`: `month,vaccinations`
+- `HealthStatus`: `name,value,fill`
+- `MonthlyActivity`: `month,registered,vaccinated,alerts`
+
+## 8. Date Range Logic in Reports
+Date filter in reports applies to:
+- `Vaccinations.date`
+- `Pregnancy.inseminationDate` (fallback: `lastCheckDate`)
+
+Expected date format in sheets: `yyyy-mm-dd`
+
+## 9. Dummy Data and Demo Readiness
+A full paste-ready data pack is available in:
+- `apps-script/DUMMY_SHEET_DATA.md`
+
+Use it to populate all tabs quickly for realistic demo output.
+
+## 10. Setup and Deployment
+
+### 10.1 Apps Script setup
+1. Open `script.google.com`
+2. Create project and paste `apps-script/Code.gs`
+3. Set Script Property `SPREADSHEET_ID`
+4. Deploy as Web App (execute as Me)
+5. Copy deployment URL
+
+### 10.2 Frontend setup
+1. Add `VITE_GAS_WEB_APP_URL` in `.env`
+2. Run:
+   - `npm install`
+   - `npm run dev`
+3. Open app and validate all routes
+
+### 10.3 Critical note
+After backend changes in `apps-script/Code.gs`, create a new Apps Script deployment (or update deployment). Without redeploy, frontend will keep calling older backend behavior.
+
+## 11. Validation Checklist (Quick QA)
+- farmers mobile validation accepts only valid Indian numbers
+- call action opens phone dialer using `tel:+91...`
+- vaccination status can be switched between Pending/Overdue/Done
+- reports date range changes table and chart values
+- CSV and PDF exports download correctly
+- bell icon opens alerts and shows toast
+- profile icon opens profile page
+- reminders page can create and send reminders
+
+## 12. Known Non-Blocking Notes
+- Vite build currently shows existing CSS warning about `@import` order in global CSS.
+- Bundle size warning appears for large chunks; functional behavior is not blocked.
+
+## 13. Suggested Next Improvements
+- add role-based login and route guards
+- add audit and sanity-check screen for sheet data mismatches
+- add report scheduling (weekly PDF/email)
+- add server-side pagination for large data
+- add village drill-down page for deeper analytics
+
+---
+This document reflects the latest implemented behavior in the current codebase and is intended as the authoritative product guide for this release.

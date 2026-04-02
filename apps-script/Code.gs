@@ -48,6 +48,9 @@ function doPost(e) {
       case "vaccinations.markDone":
         data = markVaccinationDone_(payload.animalId, payload.type);
         break;
+      case "vaccinations.updateStatus":
+        data = updateVaccinationStatus_(payload.animalId, payload.type, payload.status);
+        break;
       case "breeding.list":
         data = listRows_(SHEETS.BREEDING);
         break;
@@ -516,6 +519,15 @@ function sendReminder_(id) {
 }
 
 function markVaccinationDone_(animalId, type) {
+  return updateVaccinationStatus_(animalId, type, "Done");
+}
+
+function updateVaccinationStatus_(animalId, type, status) {
+  var nextStatus = String(status || "").trim();
+  if (nextStatus !== "Done" && nextStatus !== "Pending" && nextStatus !== "Overdue") {
+    throw new Error("Invalid vaccination status");
+  }
+
   var sheet = getSheet_(SHEETS.VACCINATIONS);
   var values = sheet.getDataRange().getValues();
   var headers = values[0];
@@ -525,12 +537,12 @@ function markVaccinationDone_(animalId, type) {
 
   for (var i = 1; i < values.length; i++) {
     if (values[i][animalIdIdx] === animalId && values[i][typeIdx] === type) {
-      sheet.getRange(i + 1, statusIdx + 1).setValue("Done");
+      sheet.getRange(i + 1, statusIdx + 1).setValue(nextStatus);
       return {
         animalId: animalId,
         type: type,
         date: values[i][findColumnIndex_(headers, "date")],
-        status: "Done"
+        status: nextStatus
       };
     }
   }

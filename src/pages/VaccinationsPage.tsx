@@ -1,14 +1,14 @@
 import { useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { StatusBadge } from "@/components/StatusBadge";
-import { CheckCircle } from "lucide-react";
-import { listVaccinations, markVaccinationDone } from "@/lib/dataService";
+import { listVaccinations, updateVaccinationStatus } from "@/lib/dataService";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/components/ui/use-toast";
 import { formatDisplayDate } from "@/lib/date";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import type { VaccinationStatus } from "@/lib/types";
 
 const VaccinationsPage = () => {
   const queryClient = useQueryClient();
@@ -17,12 +17,13 @@ const VaccinationsPage = () => {
     queryFn: listVaccinations,
   });
 
-  const markDoneMutation = useMutation({
-    mutationFn: ({ animalId, type }: { animalId: string; type: string }) => markVaccinationDone(animalId, type),
+  const updateStatusMutation = useMutation({
+    mutationFn: ({ animalId, type, status }: { animalId: string; type: string; status: VaccinationStatus }) =>
+      updateVaccinationStatus(animalId, type, status),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["vaccinations"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
-      toast({ title: "Vaccination updated", description: "Record marked as done." });
+      toast({ title: "Vaccination updated", description: "Vaccination status changed successfully." });
     },
     onError: (error: Error) => {
       toast({ title: "Update failed", description: error.message, variant: "destructive" });
@@ -62,16 +63,25 @@ const VaccinationsPage = () => {
                     <TableCell>{formatDisplayDate(v.date)}</TableCell>
                     <TableCell><StatusBadge status={v.status} /></TableCell>
                     <TableCell>
-                      {v.status !== "Done" && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => markDoneMutation.mutate({ animalId: v.animalId, type: v.type })}
-                          disabled={markDoneMutation.isPending}
-                        >
-                          <CheckCircle className="h-3.5 w-3.5 mr-1" /> Mark Done
-                        </Button>
-                      )}
+                      <Select
+                        value={v.status}
+                        onValueChange={(next) =>
+                          updateStatusMutation.mutate({
+                            animalId: v.animalId,
+                            type: v.type,
+                            status: next as VaccinationStatus,
+                          })
+                        }
+                      >
+                        <SelectTrigger className="w-[130px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Pending">Pending</SelectItem>
+                          <SelectItem value="Overdue">Overdue</SelectItem>
+                          <SelectItem value="Done">Done</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </TableCell>
                   </TableRow>
                 ))}
