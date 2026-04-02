@@ -64,7 +64,7 @@ function doPost(e) {
         data = getAlertsWithOutbreaks_();
         break;
       case "analytics.villageInsights":
-        data = getVillageInsights_();
+        data = getVillageInsights_(payload.fromDate, payload.toDate);
         break;
       case "reminders.list":
         data = getReminders_();
@@ -291,7 +291,7 @@ function detectOutbreakAlerts_() {
   return alerts;
 }
 
-function getVillageInsights_() {
+function getVillageInsights_(fromDate, toDate) {
   var animals = listRows_(SHEETS.ANIMALS);
   var farmers = listRows_(SHEETS.FARMERS);
   var vaccinations = listRows_(SHEETS.VACCINATIONS);
@@ -299,10 +299,33 @@ function getVillageInsights_() {
 
   var farmerVillageMap = {};
   farmers.forEach(function (f) {
-    farmerVillageMap[normalizePersonKey_(f.name)] = normalizeVillage_(f.village);
+    var farmerKey = normalizePersonKey_(f.name);
+    if (!farmerKey) {
+      return;
+    }
+    farmerVillageMap[farmerKey] = normalizeVillage_(f.village);
   });
 
   var insightMap = {};
+
+  function resolveVillageFromAnimal_(animal) {
+    if (!animal) {
+      return "";
+    }
+
+    var ownerVillage = farmerVillageMap[normalizePersonKey_(animal.owner)];
+    if (ownerVillage && ownerVillage !== "Unknown") {
+      return ownerVillage;
+    }
+
+    // Backward-compatible fallback in case Animals sheet includes village in some setups.
+    var directVillage = normalizeVillage_(animal.village);
+    if (directVillage && directVillage !== "Unknown") {
+      return directVillage;
+    }
+
+    return "";
+  }
 
   function ensureVillage_(village) {
     if (!insightMap[village]) {
@@ -322,8 +345,17 @@ function getVillageInsights_() {
 
   var animalVillageMap = {};
   animals.forEach(function (a) {
-    var village = farmerVillageMap[normalizePersonKey_(a.owner)] || "Unknown";
-    animalVillageMap[String(a.id)] = village;
+    var animalId = String(a.id || "").trim();
+    if (!animalId) {
+      return;
+    }
+
+    var village = resolveVillageFromAnimal_(a);
+    if (!village) {
+      return;
+    }
+
+    animalVillageMap[animalId] = village;
 
     var node = ensureVillage_(village);
     node.totalAnimals += 1;
@@ -333,7 +365,16 @@ function getVillageInsights_() {
   });
 
   vaccinations.forEach(function (v) {
-    var village = animalVillageMap[String(v.animalId)] || "Unknown";
+    var animalId = String(v.animalId || "").trim();
+    if (!animalId || !animalVillageMap[animalId]) {
+      return;
+    }
+
+    if (!isWithinDateRange_(v.date, fromDate, toDate)) {
+      return;
+    }
+
+    var village = animalVillageMap[animalId];
     var node = ensureVillage_(village);
     node._vaxTotal += 1;
     if (String(v.status) === "Done") {
@@ -344,7 +385,17 @@ function getVillageInsights_() {
   });
 
   pregnancy.forEach(function (p) {
-    var village = normalizeVillage_(p.village || animalVillageMap[String(p.animalId)] || "Unknown");
+    if (!isWithinDateRange_(p.inseminationDate || p.lastCheckDate, fromDate, toDate)) {
+      return;
+    }
+
+    var villageFromRow = normalizeVillage_(p.village);
+    var villageFromAnimal = animalVillageMap[String(p.animalId || "").trim()] || "";
+    var village = villageFromRow !== "Unknown" ? villageFromRow : villageFromAnimal;
+    if (!village) {
+      return;
+    }
+
     var node = ensureVillage_(village);
     var status = String(p.status || "");
     if (status === "Pregnant" || status === "Due Soon") {
@@ -352,13 +403,16 @@ function getVillageInsights_() {
     }
   });
 
-  return Object.keys(insightMap).map(function (village) {
+  return Object.keys(insightMap)
+    .sort()
+    .map(function (village) {
     var node = insightMap[village];
-    node.vaccinationCoverage = node._vaxTotal ? Math.round((node._vaxDone / node._vaxTotal) * 100) : 0;
+    var coverage = node._vaxTotal ? Math.round((node._vaxDone / node._vaxTotal) * 100) : 0;
+    node.vaccinationCoverage = Math.max(0, Math.min(100, coverage));
     delete node._vaxDone;
     delete node._vaxTotal;
     return node;
-  });
+    });
 }
 
 function getReminders_() {
@@ -637,6 +691,46 @@ function normalizeIndianMobile_(value) {
 
 function isValidIndianMobile_(value) {
   return /^[6-9]\d{9}$/.test(String(value || ""));
+}
+
+function toDateOnly_(value) {
+  var text = String(value || "").trim();
+  if (!text) {
+    return null;
+  }
+
+  var match = text.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!match) {
+    return null;
+  }
+
+  var year = Number(match[1]);
+  var month = Number(match[2]);
+  var day = Number(match[3]);
+  var dt = new Date(year, month - 1, day);
+  if (isNaN(dt.getTime())) {
+    return null;
+  }
+
+  dt.setHours(0, 0, 0, 0);
+  return dt;
+}
+
+function isWithinDateRange_(value, fromDate, toDate) {
+  var rowDate = toDateOnly_(value);
+  if (!rowDate) {
+    return !fromDate && !toDate;
+  }
+
+  var from = toDateOnly_(fromDate);
+  var to = toDateOnly_(toDate);
+  if (from && rowDate < from) {
+    return false;
+  }
+  if (to && rowDate > to) {
+    return false;
+  }
+  return true;
 }
 
 function jsonResponse_(success, data, error) {

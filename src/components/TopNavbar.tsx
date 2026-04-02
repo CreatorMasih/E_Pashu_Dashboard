@@ -2,9 +2,16 @@ import { Bell, Moon, Sun, User } from "lucide-react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { listAlerts } from "@/lib/dataService";
+import { toast } from "@/components/ui/use-toast";
 
 export function TopNavbar() {
   const [dark, setDark] = useState(false);
+  const navigate = useNavigate();
+  const { data: alerts = [] } = useQuery({ queryKey: ["alerts"], queryFn: listAlerts });
+  const unreadCount = alerts.filter((item) => item.priority === "High").length;
 
   const toggleDark = () => {
     setDark(!dark);
@@ -23,11 +30,24 @@ export function TopNavbar() {
         <Button variant="ghost" size="icon" onClick={toggleDark}>
           {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
         </Button>
-        <Button variant="ghost" size="icon" className="relative">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="relative"
+          onClick={() => {
+            navigate("/alerts");
+            toast({
+              title: "Notifications",
+              description: unreadCount
+                ? `${unreadCount} high-priority alerts require attention.`
+                : "No high-priority alerts right now.",
+            });
+          }}
+        >
           <Bell className="h-4 w-4" />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-destructive rounded-full" />
+          {unreadCount > 0 && <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-destructive rounded-full" />}
         </Button>
-        <Button variant="ghost" size="icon">
+        <Button variant="ghost" size="icon" onClick={() => navigate("/profile")}>
           <User className="h-4 w-4" />
         </Button>
       </div>

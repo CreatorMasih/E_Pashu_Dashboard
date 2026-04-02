@@ -282,8 +282,11 @@ export async function updatePregnancyStatus(id: string, status: PregnancyRecord[
   return normalizePregnancyRecords([raw])[0];
 }
 
-export async function listVillageInsights(): Promise<VillageInsight[]> {
-  const raw = await callAppsScript<unknown>("analytics.villageInsights");
+export async function listVillageInsights(params?: { fromDate?: string; toDate?: string }): Promise<VillageInsight[]> {
+  const raw = await callAppsScript<unknown>("analytics.villageInsights", {
+    fromDate: params?.fromDate || "",
+    toDate: params?.toDate || "",
+  });
   return normalizeVillageInsights(raw);
 }
 

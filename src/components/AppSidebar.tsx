@@ -34,7 +34,7 @@ const mainItems = [
 const systemItems = [
   { title: "Alerts", url: "/alerts", icon: Bell },
   { title: "Field Officers", url: "/field-officers", icon: UserCheck },
-  { title: "AI Insights", url: "/ai-insights", icon: Bot },
+  { title: "Reminders", url: "/ai-insights", icon: Bot },
   { title: "Reports", url: "/reports", icon: BarChart3 },
 ];
 

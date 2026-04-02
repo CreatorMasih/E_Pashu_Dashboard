@@ -6,6 +6,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { ArrowLeft, Syringe, Dna, Bell } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { getAnimalProfile } from "@/lib/dataService";
+import { formatDisplayDate } from "@/lib/date";
 
 const AnimalProfilePage = () => {
   const { id } = useParams();
@@ -54,7 +55,7 @@ const AnimalProfilePage = () => {
                     <div key={i} className="flex items-center gap-4">
                       <div className="w-2 h-2 rounded-full bg-primary" />
                       <div className="flex-1"><span className="font-medium text-sm">{v.type}</span></div>
-                      <span className="text-sm text-muted-foreground">{v.date}</span>
+                      <span className="text-sm text-muted-foreground">{formatDisplayDate(v.date)}</span>
                       <StatusBadge status={v.status} />
                     </div>
                   ))}
@@ -71,8 +72,8 @@ const AnimalProfilePage = () => {
                 <div className="space-y-3">
                   {breedingHistory.map((b, i) => (
                     <div key={i} className="flex items-center justify-between text-sm">
-                      <span>Insemination: {b.date}</span>
-                      <span>Expected: {b.expected}</span>
+                      <span>Insemination: {formatDisplayDate(b.date)}</span>
+                      <span>Expected: {formatDisplayDate(b.expected)}</span>
                       <StatusBadge status={b.status} />
                     </div>
                   ))}
@@ -90,7 +91,7 @@ const AnimalProfilePage = () => {
                   {reminders.map((r, i) => (
                     <div key={i} className="flex items-center justify-between text-sm p-2 rounded-lg bg-muted/50">
                       <span>{r.text}</span>
-                      <span className="text-muted-foreground">{r.date}</span>
+                      <span className="text-muted-foreground">{formatDisplayDate(r.date)}</span>
                     </div>
                   ))}
                 </div>

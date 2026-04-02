@@ -10,6 +10,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createReminder, listAlerts, listReminders, sendReminder } from "@/lib/dataService";
 import { toast } from "@/components/ui/use-toast";
 import type { ReminderItem } from "@/lib/types";
+import { formatDisplayDate } from "@/lib/date";
 
 const AIInsightsPage = () => {
   const queryClient = useQueryClient();
@@ -56,7 +57,7 @@ const AIInsightsPage = () => {
     <DashboardLayout>
       <div className="space-y-6">
         <div>
-          <h2 className="text-2xl font-bold">AI Alerts & Reminders</h2>
+          <h2 className="text-2xl font-bold">Reminders & Notifications</h2>
           <p className="text-muted-foreground text-sm">Outbreak insights and notification workflow</p>
         </div>
 
@@ -114,7 +115,7 @@ const AIInsightsPage = () => {
                     <TableCell>{item.recipient}</TableCell>
                     <TableCell>{item.village}</TableCell>
                     <TableCell>{item.channel}</TableCell>
-                    <TableCell>{item.dueDate}</TableCell>
+                    <TableCell>{formatDisplayDate(item.dueDate)}</TableCell>
                     <TableCell>{item.status}</TableCell>
                     <TableCell>
                       {item.status !== "Sent" && !item.id.startsWith("AUTO-") && (

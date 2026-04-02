@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/use-toast";
 import type { PregnancyRecord } from "@/lib/types";
+import { formatDisplayDate } from "@/lib/date";
 
 const BreedingPage = () => {
   const queryClient = useQueryClient();
@@ -133,7 +134,7 @@ const BreedingPage = () => {
                   <TableRow key={b.id} className={cn(b.status === "Due Soon" && "bg-amber-50 dark:bg-amber-950/20")}>
                     <TableCell className="font-medium">{b.animalId}</TableCell>
                     <TableCell>{b.village}</TableCell>
-                    <TableCell>{b.expectedCalving}</TableCell>
+                    <TableCell>{formatDisplayDate(b.expectedCalving)}</TableCell>
                     <TableCell><StatusBadge status={b.status} /></TableCell>
                     <TableCell>
                       <Select value={b.status} onValueChange={(v) => statusMutation.mutate({ id: b.id, status: v as PregnancyRecord["status"] })}>

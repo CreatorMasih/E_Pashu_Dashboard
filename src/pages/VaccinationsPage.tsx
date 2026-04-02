@@ -8,6 +8,7 @@ import { CheckCircle } from "lucide-react";
 import { listVaccinations, markVaccinationDone } from "@/lib/dataService";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/components/ui/use-toast";
+import { formatDisplayDate } from "@/lib/date";
 
 const VaccinationsPage = () => {
   const queryClient = useQueryClient();
@@ -58,7 +59,7 @@ const VaccinationsPage = () => {
                   <TableRow key={i}>
                     <TableCell className="font-medium">{v.animalId}</TableCell>
                     <TableCell>{v.type}</TableCell>
-                    <TableCell>{v.date}</TableCell>
+                    <TableCell>{formatDisplayDate(v.date)}</TableCell>
                     <TableCell><StatusBadge status={v.status} /></TableCell>
                     <TableCell>
                       {v.status !== "Done" && (

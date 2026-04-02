@@ -13,6 +13,7 @@ import AlertsPage from "./pages/AlertsPage.tsx";
 import FieldOfficersPage from "./pages/FieldOfficersPage.tsx";
 import AIInsightsPage from "./pages/AIInsightsPage.tsx";
 import ReportsPage from "./pages/ReportsPage.tsx";
+import ProfilePage from "./pages/ProfilePage.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -34,6 +35,7 @@ const App = () => (
           <Route path="/field-officers" element={<FieldOfficersPage />} />
           <Route path="/ai-insights" element={<AIInsightsPage />} />
           <Route path="/reports" element={<ReportsPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
